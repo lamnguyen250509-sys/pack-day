@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pack Day</title>
+<style>
+  :root{
+    box-sizing:border-box;
+    --bg:#f5f6f8; --surface:#ffffff; --ink:#1b1e2b; --muted:#666c80;
+    --line:#e1e4ea; --accent:#2f3c7e; --accent-ink:#ffffff;
+    --gold:#b8892b; --rare:#8a6d1f;
+    --shadow:0 1px 2px rgba(18,20,38,.06),0 6px 18px rgba(18,20,38,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#13151d; --surface:#1c1f2c; --ink:#edeff5; --muted:#99a0b4;
+      --line:#2b2f40; --accent:#8e9bd8; --accent-ink:#13151d;
+      --gold:#e3bf6a; --rare:#e3bf6a;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#13151d; --surface:#1c1f2c; --ink:#edeff5; --muted:#99a0b4;
+    --line:#2b2f40; --accent:#8e9bd8; --accent-ink:#13151d;
+    --gold:#e3bf6a; --rare:#e3bf6a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-text-size-adjust:100%}
+  .wrap{max-width:620px;margin:0 auto;padding:20px 18px 60px}
+  h1{font-size:1.5rem;line-height:1.2;margin:0 0 12px}
+  h2{font-size:1.1rem;margin:0 0 10px}
+  p{margin:0 0 14px}
+  .muted{color:var(--muted)} .small{font-size:.87rem}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+  button{font:inherit;font-weight:600;cursor:pointer;border-radius:10px;
+    border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+    padding:13px 18px;width:100%}
+  button.ghost{background:transparent;color:var(--accent)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>button{flex:1 1 150px;width:auto}
+  input[type=number],textarea{font:inherit;width:100%;padding:11px 12px;border-radius:10px;
+    border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+  textarea{min-height:72px;resize:vertical}
+  label{display:block;font-weight:600;margin:0 0 6px}
+  .consent{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;font-weight:400}
+  .consent input{margin-top:4px;width:18px;height:18px;flex:none}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:10px;
+    padding:9px 13px;margin-bottom:14px;background:var(--surface);font-size:.9rem}
+  .pill{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+    color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:2px 9px}
+  .target{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--muted);
+    margin-bottom:12px;justify-content:center}
+  .target b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .packwrap{display:flex;flex-direction:column;align-items:center;padding:6px 0}
+  .pack{width:min(210px,62vw);aspect-ratio:5/7;border-radius:14px;border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:14px;background:var(--surface);box-shadow:var(--shadow)}
+  .pack.sealed{background:linear-gradient(150deg,var(--accent),color-mix(in srgb,var(--accent) 60%, #000));
+    color:var(--accent-ink);border-color:transparent}
+  .pack .glyph{font-size:2.5rem;line-height:1;margin-bottom:10px}
+  .pack .nm{font-weight:600;font-size:.98rem;margin-bottom:8px}
+  .pack .num{font-size:1.55rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .pack.hit{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 26%, transparent),var(--shadow)}
+  .pack.hit .num{color:var(--rare)}
+  .flip{animation:flip .36s ease}
+  @keyframes flip{from{transform:rotateY(90deg);opacity:0}to{transform:rotateY(0);opacity:1}}
+  .scale{display:flex;gap:6px}
+  .scale button{flex:1;padding:12px 0;background:transparent;color:var(--ink);
+    border-color:var(--line);font-weight:600}
+  .scale button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .ends{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:6px}
+  .dots{display:flex;gap:5px;margin-bottom:14px}
+  .dots>i{flex:1;height:4px;border-radius:999px;background:var(--line)}
+  .dots>i.done{background:var(--accent)}
+  .dots>i.now{background:color-mix(in srgb,var(--accent) 55%, transparent)}
+  .pid{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.5rem;font-weight:700;
+    text-align:center;letter-spacing:.08em;background:var(--bg);border:1px dashed var(--line);
+    border-radius:10px;padding:14px;margin:4px 0 12px}
+  .err{color:#b3261e;font-size:.86rem;margin-top:8px}
+  @media (prefers-color-scheme: dark){.err{color:#f2b8b5}}
+  .hide{display:none}
+  table.sum{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem}
+  table.sum td{padding:7px 2px;border-bottom:1px solid var(--line)}
+  table.sum td:last-child{text-align:right;font-weight:600}
+  table.sum tr.best td{color:var(--rare)}
+</style>
+</head>
+<body>
+<div class="wrap"><div id="app"></div></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ========================================================================
+     CONFIG — every tunable number lives here.
+     ===================================================================== */
+  var CFG = {
+    setSize:        100,   // cards in the set
+    chase:          50,    // the chase card's number
+    chaseValue:     40,    // tokens the chase card pays
+    hitChance:      0.25,  // probability any pack holds the chase card
+    endowment:      20,    // tokens at the START of every round
+    packPrice:      12,    // cost of the optional second pack
+    practiceRounds: 2,
+    scoredRounds:   5,
+    researcher:     "Lam",
+    contactEmail:   "lamnguyen250509@gmail.com"
+  };
+
+  // Expected payoff per pack = 0.25 x 40 = 10 tokens, against a price of 12.
+
+  // Distance bands. Each non-hit draw picks one of these at random (equal
+  // probability), then a card at random inside it. Gaps between bands are
+  // deliberate so the bands stay clearly separated.
+  var BANDS = {
+    d1: [[48,49],[51,52]],      // distance 1-2
+    d2: [[42,45],[55,58]],      // distance 5-8
+    d3: [[25,35],[65,75]],      // distance 15-25
+    d4: [[1,10],[90,100]]       // distance 40+
+  };
+  var BAND_KEYS = ["d1","d2","d3","d4"];
+
+  /* ------------------------------------------------------------------------
+     SAVE_URL — paste your Google Apps Script web-app URL between the quotes.
+     Leave it empty while testing; the game still runs and just skips saving.
+     --------------------------------------------------------------------- */
+  var SAVE_URL = "";
+
+  /* ========================================================================
+     CARD FLAVOUR — names and glyphs are decorative only.
+     They are derived from the number so a card always looks the same, and
+     they carry NO information about distance. The number is the only
+     dimension of closeness in this study.
+     ===================================================================== */
+  var PRE = ["Ember","Tide","Pebble","Bark","Frost","Cinder","Moss","Gale","Dusk","Spark"];
+  var SUF = ["fox","whisker","moth","ling","paw","tail","fin","wing","horn","snout"];
+  var GLYPH = ["🦊","🐟","🦋","🌿","❄️",
+               "🔥","🍄","🌪️","🌙","⚡"];
+
+  function cardName(n){
+    if (n === CFG.chase) return "Aurelion";
+    return PRE[(n * 7) % 10] + SUF[(n * 3) % 10];
+  }
+  function cardGlyph(n){
+    if (n === CFG.chase) return "👑";
+    return GLYPH[(n * 3) % 10];
+  }
+  function pad(n){ return String(n).padStart(3, "0"); }
+
+  /* ========================================================================
+     THE DRAW — one pack, drawn fresh every time.
+     P(chase) is exactly CFG.hitChance on every draw, independent of history.
+     ===================================================================== */
+  function draw(){
+    if (Math.random() < CFG.hitChance){
+      return { card: CFG.chase, band: "hit", distance: 0, isHit: true };
+    }
+    var band  = BAND_KEYS[Math.floor(Math.random() * BAND_KEYS.length)];
+    var side  = BANDS[band][Math.floor(Math.random() * 2)];
+    var card  = side[0] + Math.floor(Math.random() * (side[1] - side[0] + 1));
+    return { card: card, band: band, distance: Math.abs(card - CFG.chase), isHit: false };
+  }
+
+  /* ===================================================================== */
+
+  var S = {
+    player: String(Math.floor(1000 + Math.random() * 9000)),
+    beliefStart: null,
+    beliefEnd: null,
+    familiarity: null,
+    comment: "",
+    rounds: [],                 // one entry per SCORED round
+    startedAt: new Date().toISOString(),
+    finishedAt: null
+  };
+
+  var app = document.getElementById("app");
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
+    });
+  }
+  function el(id){ return document.getElementById(id); }
+  function go(fn){ app.innerHTML = ""; fn(); window.scrollTo(0,0); }
+
+  /* ---------- shared pieces ---------- */
+
+  function topbar(label, tokens){
+    return '<div class="topbar"><span>' + label + '</span>' +
+           '<span><b class="tok">' + tokens + '</b> tokens</span>' +
+           '<span class="pill">P' + S.player + '</span></div>';
+  }
+  function dots(done, total){
+    var out = '<div class="dots">';
+    for (var i = 0; i < total; i++){
+      out += '<i class="' + (i < done ? "done" : (i === done ? "now" : "")) + '"></i>';
+    }
+    return out + '</div>';
+  }
+  function targetLine(){
+    return '<div class="target">You are looking for <b>' + pad(CFG.chase) + ' / ' +
+           CFG.setSize + '</b> · worth ' + CFG.chaseValue + ' tokens</div>';
+  }
+  function sealedHTML(){
+    return '<div class="pack sealed" id="pk"><div class="glyph">✦</div>' +
+           '<div class="nm">Sealed pack</div></div>';
+  }
+  function cardHTML(res){
+    return '<div class="pack flip' + (res.isHit ? ' hit' : '') + '" id="pk">' +
+           '<div class="glyph">' + cardGlyph(res.card) + '</div>' +
+           '<div class="nm">' + esc(cardName(res.card)) + '</div>' +
+           '<div class="num">' + pad(res.card) + ' / ' + CFG.setSize + '</div>' +
+           (res.isHit ? '<div class="small" style="margin-top:8px;color:var(--rare);font-weight:700">+' +
+             CFG.chaseValue + ' tokens</div>' : '') + '</div>';
+  }
+  function scaleHTML(attr){
+    var out = '<div class="scale">';
+    for (var i = 1; i <= 5; i++){
+      out += '<button type="button" data-' + attr + '="' + i + '" aria-pressed="false">' + i + '</button>';
+    }
+    return out + '</div>';
+  }
+  function wireScale(attr, onPick){
+    var btns = app.querySelectorAll("[data-" + attr + "]");
+    Array.prototype.forEach.call(btns, function(b){
+      b.onclick = function(){
+        Array.prototype.forEach.call(btns, function(o){
+          o.setAttribute("aria-pressed", o === b ? "true" : "false");
+        });
+        onPick(parseInt(b.getAttribute("data-" + attr), 10));
+      };
+    });
+  }
+
+  /* ---------- 1-4. Welcome ---------- */
+
+  function screenWelcome(){
+    app.innerHTML =
+      '<div class="card">' +
+      '<h1>Pack Day</h1>' +
+      '<p>Thanks for taking part.</p>' +
+      '<p>This is a short game, and it is part of a research project I am doing with the ' +
+        'Cambridge Centre for International Research. My name is ' + CFG.researcher +
+        ' and I am a student at UNIS Hanoi.</p>' +
+      '<p>The research is about <strong>how people make decisions under risk and uncertainty</strong> ' +
+        '— the kind of choice you make when you know the odds but not the outcome.</p>' +
+      '<p>It takes about <strong>7 to 10 minutes</strong>.</p>' +
+      '<p><strong>Taking part is completely voluntary.</strong> You can leave at any point by closing ' +
+        'the page, and you do not need to give a reason. Nothing is saved unless you reach the end.</p>' +
+      '<p><strong>Everything is anonymous.</strong> No name, email or anything else identifying you ' +
+        'is collected at any stage.</p>' +
+      '<p class="small muted">The cards in this game are invented for the study. No real trading cards appear.</p>' +
+      '</div>' +
+      '<div class="card"><button id="go">Continue</button></div>';
+    el("go").onclick = function(){ go(screenConsent); };
+  }
+
+  /* ---------- 5. Consent ---------- */
+
+  function screenConsent(){
+    app.innerHTML =
+      '<div class="card">' +
+      '<h2>Before we start</h2>' +
+      '<label class="consent"><input type="checkbox" id="c1">' +
+        '<span>I have read the information on the previous page. I am taking part voluntarily, ' +
+        'I know I can stop at any time, and I understand my answers are anonymous.</span></label>' +
+      '<label class="consent"><input type="checkbox" id="c2">' +
+        '<span><em>If you are under 18:</em> a parent or guardian has seen the information sheet ' +
+        'shared with this link and is happy for me to take part.</span></label>' +
+      '<div class="row">' +
+        '<button id="yes" disabled>Start the game</button>' +
+        '<button id="no" class="ghost">No thanks</button>' +
+      '</div></div>';
+
+    function sync(){ el("yes").disabled = !(el("c1").checked && el("c2").checked); }
+    el("c1").onchange = sync;
+    el("c2").onchange = sync;
+
+    el("yes").onclick = function(){ go(screenRules); };
+    el("no").onclick  = function(){
+      app.innerHTML = '<div class="card"><h2>No problem</h2>' +
+        '<p class="muted">Thanks for your time — you can close this page.</p></div>';
+    };
+  }
+
+  /* ---------- 6. How it works ---------- */
+
+  function screenRules(){
+    app.innerHTML =
+      '<div class="card"><h2>How it works</h2>' +
+      '<p><strong>The cards.</strong> There are ' + CFG.setSize + ' cards in this set, numbered 001 to ' +
+        CFG.setSize + '.</p>' +
+      '<div class="packwrap">' +
+        '<div class="pack hit"><div class="glyph">' + cardGlyph(CFG.chase) + '</div>' +
+        '<div class="nm">' + esc(cardName(CFG.chase)) + '</div>' +
+        '<div class="num">' + pad(CFG.chase) + ' / ' + CFG.setSize + '</div></div>' +
+      '</div>' +
+      '<p style="margin-top:14px"><strong>Card ' + pad(CFG.chase) + ' is the one you want.</strong> ' +
+        'It is worth <strong>' + CFG.chaseValue + ' tokens</strong>. Every other card in the set is a ' +
+        'common and is worth <strong>nothing</strong>.</p>' +
+      '<p><strong>The odds.</strong> Every pack holds one card, and every pack has a ' +
+        '<strong>1 in 4 chance (25%)</strong> of containing card ' + pad(CFG.chase) + '. That chance is ' +
+        'the same on every single pack, no matter what came before.</p>' +
+      '<p><strong>A round.</strong> You start each round with <strong>' + CFG.endowment + ' tokens</strong>. ' +
+        'One pack opens for free. After seeing it, you choose whether to buy one more pack for ' +
+        '<strong>' + CFG.packPrice + ' tokens</strong>, or keep what you have. Then the round ends.</p>' +
+      '<p><strong>Your goal: end each round with as many tokens as you can.</strong></p>' +
+      '<p><strong>Rounds are separate.</strong> You will play <strong>' + CFG.scoredRounds +
+        ' rounds</strong>, and each one starts fresh at ' + CFG.endowment + ' tokens. Nothing carries ' +
+        'over — a bad round cannot hurt a later one, and a good one does not help.</p>' +
+      '<p><strong>The competition.</strong> Everyone who plays is entered. You will be given a ' +
+        '<strong>player number</strong> on the next screen — that is how scores are told apart, since ' +
+        'no names are collected. The highest score wins a <strong>voucher</strong>, and the winning ' +
+        'number will be posted where you got this link.</p>' +
+      '</div>' +
+      '<div class="card"><button id="go">Continue</button></div>';
+    el("go").onclick = function(){ go(screenPlayer); };
+  }
+
+  /* ---------- 7. Player number ---------- */
+
+  function screenPlayer(){
+    app.innerHTML =
+      '<div class="card"><h2>Your player number</h2>' +
+      '<div class="pid">P' + S.player + '</div>' +
+      '<p>This is yours for the whole game. Write it down or screenshot it — if it wins, ' +
+        'you will need it to claim the voucher.</p>' +
+      '<p class="small muted">It was generated just now and is not linked to your name ' +
+        'or to anything else about you.</p>' +
+      '</div>' +
+      '<div class="card"><button id="go">Continue</button></div>';
+    el("go").onclick = function(){ go(screenCheck); };
+  }
+
+  /* ---------- 8. Comprehension check / baseline belief ---------- */
+
+  function screenCheck(){
+    app.innerHTML =
+      '<div class="card"><h2>Quick check</h2>' +
+      '<label for="b">Out of 100 packs, how many would you expect to contain card ' +
+        pad(CFG.chase) + '?</label>' +
+      '<input id="b" type="number" min="0" max="100" inputmode="numeric" placeholder="0–100">' +
+      '<div id="e" class="err hide">Enter a number between 0 and 100.</div>' +
+      '</div>' +
+      '<div class="card"><button id="go">Start</button></div>';
+    el("go").onclick = function(){
+      var v = parseInt(el("b").value, 10);
+      if (isNaN(v) || v < 0 || v > 100){ el("e").classList.remove("hide"); return; }
+      S.beliefStart = v;
+      go(function(){ runRound(0, true); });
+    };
+  }
+
+  /* ---------- 9/10. A round (practice or scored) ---------- */
+
+  function runRound(i, isPractice){
+    var total  = isPractice ? CFG.practiceRounds : CFG.scoredRounds;
+    var label  = isPractice ? ("Practice " + (i+1) + " of " + total)
+                            : ("Round " + (i+1) + " of " + total);
+    var tokens = CFG.endowment;
+
+    app.innerHTML =
+      dots(i, total) + topbar(label, tokens) + targetLine() +
+      '<div class="card">' +
+      (isPractice && i === 0
+        ? '<p class="small muted">These two practice rounds do not count. They are just so you know ' +
+          'what you are doing before the real rounds start.</p>'
+        : '') +
+      '<div class="packwrap">' + sealedHTML() + '</div>' +
+      '<div style="height:14px"></div><button id="open">Open your pack</button></div>';
+
+    el("open").onclick = function(){
+      var first = draw();
+      if (first.isHit) tokens += CFG.chaseValue;
+      el("pk").outerHTML = cardHTML(first);
+      app.querySelector(".tok").textContent = tokens;
+      var b = el("open");
+      b.textContent = "Continue";
+      b.onclick = function(){ decide(i, isPractice, first, tokens, label, total); };
+    };
+  }
+
+  function decide(i, isPractice, first, tokens, label, total){
+    app.innerHTML =
+      dots(i, total) + topbar(label, tokens) + targetLine() +
+      '<div class="card"><h2>One more pack?</h2>' +
+      '<p>It costs <strong>' + CFG.packPrice + ' tokens</strong>. The chance is the same as always: ' +
+        '<strong>1 in 4</strong> for card ' + pad(CFG.chase) + ', worth ' + CFG.chaseValue + ' tokens.</p>' +
+      '<div class="row">' +
+        '<button id="buy">Buy a pack — ' + CFG.packPrice + '</button>' +
+        '<button id="stop" class="ghost">Keep my tokens</button>' +
+      '</div></div>';
+
+    el("stop").onclick = function(){
+      finishRound(i, isPractice, first, null, tokens, label, total, false);
+    };
+    el("buy").onclick = function(){
+      var second = draw();
+      var t = tokens - CFG.packPrice + (second.isHit ? CFG.chaseValue : 0);
+      app.innerHTML =
+        dots(i, total) + topbar(label, t) + targetLine() +
+        '<div class="card"><div class="packwrap">' + cardHTML(second) + '</div>' +
+        '<div style="height:14px"></div><button id="n">Continue</button></div>';
+      el("n").onclick = function(){
+        finishRound(i, isPractice, first, second, t, label, total, true);
+      };
+    };
+  }
+
+  function finishRound(i, isPractice, first, second, score, label, total, bought){
+    // Practice rounds are never recorded and skip the rating.
+    if (isPractice){
+      if (i + 1 < CFG.practiceRounds){ go(function(){ runRound(i+1, true); }); return; }
+      app.innerHTML =
+        '<div class="card"><h2>That is the whole game</h2>' +
+        '<p>Ready for real? The next ' + CFG.scoredRounds + ' rounds count towards your score.</p>' +
+        '<button id="go">Start round 1</button></div>';
+      el("go").onclick = function(){ go(function(){ runRound(0, false); }); };
+      return;
+    }
+
+    var picked = null;
+    app.innerHTML =
+      dots(i + 1, total) + topbar(label + " complete", score) +
+      '<div class="card">' +
+      '<p>You finished this round with <strong>' + score + ' tokens</strong>.</p>' +
+      '<label style="margin-top:16px">How did that round feel?</label>' +
+      scaleHTML("close") +
+      '<div class="ends"><span>Nowhere near</span><span>So close</span></div>' +
+      '</div>' +
+      '<div class="card"><button id="n" disabled>' +
+        (i + 1 < total ? "Next round" : "Last questions") + '</button>' +
+      '</div>';
+
+    wireScale("close", function(v){ picked = v; el("n").disabled = false; });
+
+    el("n").onclick = function(){
+      S.rounds.push({
+        round: i + 1,
+        firstCard: first.card,
+        distance: first.isHit ? null : first.distance,
+        band: first.band,
+        bought: bought,
+        secondCard: second ? second.card : null,
+        secondBand: second ? second.band : null,
+        roundScore: score,
+        closeness: picked
+      });
+      if (i + 1 < CFG.scoredRounds) go(function(){ runRound(i+1, false); });
+      else go(screenClosing);
+    };
+  }
+
+  /* ---------- 11. Closing questions ---------- */
+
+  function screenClosing(){
+    app.innerHTML =
+      '<div class="card"><h2>Last few questions</h2></div>' +
+      '<div class="card">' +
+      '<label for="b2">Out of 100 packs, how many do you think contain card ' + pad(CFG.chase) + '?</label>' +
+      '<input id="b2" type="number" min="0" max="100" inputmode="numeric" placeholder="0–100">' +
+      '</div>' +
+      '<div class="card">' +
+      '<label>How familiar are you with collectible card games?</label>' +
+      scaleHTML("fam") +
+      '<div class="ends"><span>Never played</span><span>I collect regularly</span></div>' +
+      '</div>' +
+      '<div class="card">' +
+      '<label for="cm">Anything you want to say about the game? <span class="muted">(optional)</span></label>' +
+      '<textarea id="cm" placeholder="Optional"></textarea>' +
+      '</div>' +
+      '<div class="card"><button id="fin">Finish</button>' +
+      '<div id="e" class="err hide">Please answer the first two questions.</div></div>';
+
+    wireScale("fam", function(v){ S.familiarity = v; });
+
+    el("fin").onclick = function(){
+      var v = parseInt(el("b2").value, 10);
+      if (isNaN(v) || v < 0 || v > 100 || S.familiarity === null){
+        el("e").classList.remove("hide"); return;
+      }
+      S.beliefEnd  = v;
+      S.comment    = el("cm").value.slice(0, 500);
+      S.finishedAt = new Date().toISOString();
+      go(screenDebrief);
+      save();
+    };
+  }
+
+  /* ---------- 12. Debrief ---------- */
+
+  function bestRound(){
+    return S.rounds.reduce(function(m,r){ return Math.max(m, r.roundScore); }, 0);
+  }
+
+  function screenDebrief(){
+    var best = bestRound();
+    var rows = S.rounds.map(function(r){
+      var isBest = r.roundScore === best;
+      return '<tr' + (isBest ? ' class="best"' : '') + '><td>Round ' + r.round +
+             (r.bought ? ' · bought a second pack' : ' · kept tokens') +
+             '</td><td>' + r.roundScore + (isBest ? ' ★' : '') + '</td></tr>';
+    }).join("");
+
+    app.innerHTML =
+      '<div class="card"><h2>Thanks for playing</h2>' +
+      '<p>Your player number is below. Keep it — if it wins, it will be posted where you got the link.</p>' +
+      '<div class="pid">P' + S.player + '</div>' +
+      '<p class="small muted" id="sv">Saving your response…</p>' +
+      '</div>' +
+
+      '<div class="card"><h2>Your rounds</h2>' +
+      '<table class="sum"><tbody>' + rows + '</tbody></table>' +
+      '<p class="small muted" style="margin-top:12px">Best round: <strong>' + best +
+        ' tokens</strong> — this is the score entered for the voucher.</p></div>' +
+
+      '<div class="card"><h2>What this was actually about</h2>' +
+      '<p>This study looks at whether pulling a card <em>close in number</em> to the one you wanted ' +
+        'makes people more willing to buy another pack — even though a card two away and a card ' +
+        'forty away are both worth exactly nothing.</p>' +
+      '<p>Everything you were told was true. Every pack really did have a 1 in 4 chance of card ' +
+        pad(CFG.chase) + ', every draw was independent, and the odds never changed. What varied was ' +
+        'how near the number on each common happened to be, and that was decided at random each time.</p>' +
+      '<p class="small muted">Questions or curiosity: ' + esc(CFG.contactEmail) + '</p></div>';
+  }
+
+  /* ---------- Saving ---------- */
+
+  function payload(){
+    return {
+      player: S.player,
+      beliefStart: S.beliefStart,
+      beliefEnd: S.beliefEnd,
+      beliefShift: S.beliefEnd - S.beliefStart,
+      familiarity: S.familiarity,
+      comment: S.comment,
+      bestRound: bestRound(),
+      buysTotal: S.rounds.filter(function(r){ return r.bought; }).length,
+      rounds: S.rounds,
+      config: CFG,
+      startedAt: S.startedAt,
+      finishedAt: S.finishedAt
+    };
+  }
+
+  function save(){
+    var note = function(t){ var n = el("sv"); if (n) n.textContent = t; };
+    var fallback = "Could not save automatically — please send your player number to " + CFG.contactEmail + ".";
+
+    if (!SAVE_URL){
+      note("Test mode — nothing was saved. (Open the browser console to see the data.)");
+      if (window.console && console.log) console.log(payload());
+      return;
+    }
+    // text/plain keeps this a "simple" request, so the browser sends no preflight.
+    fetch(SAVE_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload())
+    }).then(function(){
+      note("Response saved. Thank you.");
+    }).catch(function(){
+      note(fallback);
+    });
+  }
+
+  screenWelcome();
+})();
+</script>
+</body>
+</html>
